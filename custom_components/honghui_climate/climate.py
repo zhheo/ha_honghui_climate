@@ -246,22 +246,29 @@ class HonghuiAirClimate(ClimateEntity):
         
         # 检查是否在短时间内多次更新
         if key in _RECURSION_COUNTERS:
-            # 如果最近一次更新在1秒内，则增加计数
-            if current_time - _RECURSION_COUNTERS[key]['time'] < 1.0:
-                _RECURSION_COUNTERS[key]['count'] += 1
-                # 如果短时间内更新次数太多，则跳过此次更新
-                if _RECURSION_COUNTERS[key]['count'] > _MAX_RECURSION_DEPTH:
-                    _LOGGER.debug("跳过短时间内过多的状态更新: %s", key)
-                    return
+            if isinstance(_RECURSION_COUNTERS[key], dict) and 'time' in _RECURSION_COUNTERS[key]:
+                # 如果最近一次更新在1秒内，则增加计数
+                if current_time - _RECURSION_COUNTERS[key]['time'] < 1.0:
+                    _RECURSION_COUNTERS[key]['count'] += 1
+                    # 如果短时间内更新次数太多，则跳过此次更新
+                    if _RECURSION_COUNTERS[key]['count'] > _MAX_RECURSION_DEPTH:
+                        _LOGGER.debug("跳过短时间内过多的状态更新: %s", key)
+                        return
+                else:
+                    # 重置计数器
+                    _RECURSION_COUNTERS[key]['count'] = 1
             else:
-                # 重置计数器
-                _RECURSION_COUNTERS[key]['count'] = 1
+                # 如果结构不正确，重新初始化
+                _RECURSION_COUNTERS[key] = {'count': 1, 'time': current_time}
         else:
             # 初始化计数器
             _RECURSION_COUNTERS[key] = {'count': 1, 'time': current_time}
         
         # 更新时间戳
         _RECURSION_COUNTERS[key]['time'] = current_time
+        
+        # 记录事件详情，帮助调试
+        _LOGGER.debug("接收到空调状态变化事件: %s", event.data)
         
         self._update_state()
         self.async_write_ha_state()
@@ -328,6 +335,15 @@ class HonghuiAirClimate(ClimateEntity):
                 self._attr_max_temp = ac_state.attributes.get("max_temp")
                 self._attr_min_temp = ac_state.attributes.get("min_temp")
                 self._attr_target_temperature_step = ac_state.attributes.get("target_temp_step", 1)
+                _LOGGER.debug(
+                    "从源空调更新温度 - 目标温度: %s, 最小: %s, 最大: %s, 步长: %s",
+                    self._attr_target_temperature,
+                    self._attr_min_temp,
+                    self._attr_max_temp,
+                    self._attr_target_temperature_step
+                )
+            else:
+                _LOGGER.debug("源空调 %s 状态中没有温度属性", self._ac_entity_id)
                 
             # 从温度传感器获取当前温度
             temp_state = self.hass.states.get(self._temp_entity_id)
@@ -363,14 +379,58 @@ class HonghuiAirClimate(ClimateEntity):
         if self._ac_entity_id == entity_id or self._ac_entity_id.startswith(f"{DOMAIN}."):
             _LOGGER.error("检测到递归调用：无法将温度设置传递给虚拟空调实体 %s", self._ac_entity_id)
             return
+            
+        # 记录传入的参数，帮助调试
+        _LOGGER.debug("设置温度请求参数: %s", kwargs)
+        
+        # 确保温度值正确传递
+        service_data = {"entity_id": self._ac_entity_id}
+        
+        # 提取关键参数
+        if ATTR_TEMPERATURE in kwargs:
+            service_data[ATTR_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
+            _LOGGER.debug("正在设置目标空调 %s 的温度为 %s", 
+                          self._ac_entity_id, kwargs[ATTR_TEMPERATURE])
+        else:
+            _LOGGER.warning("设置温度请求中缺少温度参数")
+            return
+            
+        # 传递其他可能的参数
+        if "hvac_mode" in kwargs:
+            service_data["hvac_mode"] = kwargs["hvac_mode"]
+        if "target_temp_high" in kwargs:
+            service_data["target_temp_high"] = kwargs["target_temp_high"]
+        if "target_temp_low" in kwargs:
+            service_data["target_temp_low"] = kwargs["target_temp_low"]
 
         # 将温度设置传递给源空调
-        await self.hass.services.async_call(
-            "climate",
-            "set_temperature",
-            {"entity_id": self._ac_entity_id, **kwargs},
-            blocking=True,
-        )
+        try:
+            # 检查目标空调实体是否存在
+            ac_state = self.hass.states.get(self._ac_entity_id)
+            if ac_state is None:
+                _LOGGER.error("无法设置温度: 目标空调实体 %s 不存在", self._ac_entity_id)
+                return
+                
+            # 检查目标空调是否支持温度设置
+            if not hasattr(ac_state.attributes, 'get') or ATTR_TEMPERATURE not in ac_state.attributes:
+                _LOGGER.warning("目标空调实体 %s 可能不支持温度设置", self._ac_entity_id)
+                # 继续尝试设置，因为有些实体可能接受设置但不报告属性
+            
+            # 直接调用服务设置温度
+            await self.hass.services.async_call(
+                "climate",
+                "set_temperature",
+                service_data,
+                blocking=True,
+            )
+            
+            # 在温度设置后主动更新一次状态，确保变化被反映
+            self._update_state()
+            self.async_write_ha_state()
+            
+            _LOGGER.debug("成功发送温度设置到目标空调: %s", service_data)
+        except Exception as e:
+            _LOGGER.error("设置目标空调温度时出错: %s, 错误: %s", self._ac_entity_id, str(e))
         
     @prevent_recursion
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -381,13 +441,37 @@ class HonghuiAirClimate(ClimateEntity):
             _LOGGER.error("检测到递归调用：无法将HVAC模式设置传递给虚拟空调实体 %s", self._ac_entity_id)
             return
             
-        # 将模式设置传递给源空调
-        await self.hass.services.async_call(
-            "climate",
-            "set_hvac_mode",
-            {"entity_id": self._ac_entity_id, "hvac_mode": hvac_mode},
-            blocking=True,
-        )
+        # 记录正在设置的模式
+        _LOGGER.debug("设置HVAC模式: %s 到目标空调: %s", hvac_mode, self._ac_entity_id)
+        
+        try:
+            # 将模式设置传递给源空调
+            await self.hass.services.async_call(
+                "climate",
+                "set_hvac_mode",
+                {"entity_id": self._ac_entity_id, "hvac_mode": hvac_mode},
+                blocking=True,
+            )
+            
+            # 保存当前的目标温度，以备需要
+            current_target_temp = self.target_temperature if hasattr(self, "target_temperature") else None
+            
+            # 更新状态以反映模式变化
+            self._update_state()
+            self.async_write_ha_state()
+            
+            # 如果模式变化后目标温度丢失，尝试重新设置
+            if hvac_mode != HVACMode.OFF and current_target_temp is not None:
+                # 获取更新后的状态
+                ac_state = self.hass.states.get(self._ac_entity_id)
+                if ac_state and ATTR_TEMPERATURE not in ac_state.attributes:
+                    _LOGGER.debug("模式变化后目标温度丢失，尝试重新设置: %s", current_target_temp)
+                    # 重新设置温度
+                    await self.async_set_temperature(**{ATTR_TEMPERATURE: current_target_temp})
+                    
+            _LOGGER.debug("成功设置HVAC模式: %s", hvac_mode)
+        except Exception as e:
+            _LOGGER.error("设置HVAC模式时出错: %s, 错误: %s", hvac_mode, str(e))
         
     @prevent_recursion
     async def async_set_fan_mode(self, fan_mode: str) -> None:
