@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup HongHui Climate",
+        "description": "Select an existing air conditioner entity and temperature sensor entity to create a virtual AC",
+        "data": {
+          "ac_entity_id": "Air Conditioner Entity",
+          "temp_entity_id": "Temperature Sensor Entity"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Entity not found"
+    },
+    "abort": {
+      "already_configured": "This combination is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modify HongHui Climate Configuration",
+        "description": "Update air conditioner and temperature sensor entities",
+        "data": {
+          "ac_entity_id": "Air Conditioner Entity",
+          "temp_entity_id": "Temperature Sensor Entity"
+        }
+      }
+    }
+  }
+} 

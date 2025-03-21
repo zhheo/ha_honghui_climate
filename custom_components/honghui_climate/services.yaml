@@ -1,0 +1,38 @@
+# 服务定义文件
+set_ac_entity:
+  name: 设置空调实体
+  description: 更改虚拟空调使用的空调实体
+  fields:
+    entity_id:
+      name: 实体
+      description: 要修改的洪绘空调实体
+      required: true
+      selector:
+        entity:
+          domain: honghui_climate
+    ac_entity_id:
+      name: 空调实体
+      description: 要使用的空调实体
+      required: true
+      selector:
+        entity:
+          domain: climate
+
+set_temp_entity:
+  name: 设置温度传感器实体
+  description: 更改虚拟空调使用的温度传感器实体
+  fields:
+    entity_id:
+      name: 实体
+      description: 要修改的洪绘空调实体
+      required: true
+      selector:
+        entity:
+          domain: honghui_climate
+    temp_entity_id:
+      name: 温度传感器实体
+      description: 要使用的温度传感器实体
+      required: true
+      selector:
+        entity:
+          domain: sensor 

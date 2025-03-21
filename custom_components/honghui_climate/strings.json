@@ -1,0 +1,40 @@
+{
+  "title": "洪绘空调",
+  "config": {
+    "step": {
+      "user": {
+        "title": "设置洪绘空调",
+        "description": "选择一个现有的空调实体和温度传感器实体来创建虚拟空调",
+        "data": {
+          "ac_entity_id": "空调实体",
+          "temp_entity_id": "温度传感器实体"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "找不到指定的实体"
+    },
+    "abort": {
+      "already_configured": "此组合已经配置"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "修改洪绘空调配置",
+        "description": "更新空调和温度传感器实体",
+        "data": {
+          "ac_entity_id": "空调实体",
+          "temp_entity_id": "温度传感器实体"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "name": "洪绘空调"
+      }
+    }
+  }
+} 
