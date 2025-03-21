@@ -36,6 +36,10 @@ class HonghuiAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_AC_ENTITY_ID] = "entity_not_found"
             if not self.hass.states.get(user_input[CONF_TEMP_ENTITY_ID]):
                 errors[CONF_TEMP_ENTITY_ID] = "entity_not_found"
+                
+            # 验证空调实体不是虚拟空调实体，避免递归
+            if user_input[CONF_AC_ENTITY_ID].startswith(f"{DOMAIN}."):
+                errors[CONF_AC_ENTITY_ID] = "cannot_use_virtual_climate"
 
             if not errors:
                 # 检查这种配置是否已存在
@@ -92,6 +96,10 @@ class HonghuiAirOptionsFlow(config_entries.OptionsFlow):
                 errors[CONF_AC_ENTITY_ID] = "entity_not_found"
             if not self.hass.states.get(user_input[CONF_TEMP_ENTITY_ID]):
                 errors[CONF_TEMP_ENTITY_ID] = "entity_not_found"
+                
+            # 验证空调实体不是虚拟空调实体，避免递归
+            if user_input[CONF_AC_ENTITY_ID].startswith(f"{DOMAIN}."):
+                errors[CONF_AC_ENTITY_ID] = "cannot_use_virtual_climate"
 
             if not errors:
                 # 更新条目数据

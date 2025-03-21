@@ -11,7 +11,8 @@
       }
     },
     "error": {
-      "entity_not_found": "Entity not found"
+      "entity_not_found": "Entity not found",
+      "cannot_use_virtual_climate": "Cannot use a virtual climate entity as the source, this would cause a recursive call"
     },
     "abort": {
       "already_configured": "This combination is already configured"
@@ -27,6 +28,10 @@
           "temp_entity_id": "Temperature Sensor Entity"
         }
       }
+    },
+    "error": {
+      "entity_not_found": "Entity not found",
+      "cannot_use_virtual_climate": "Cannot use a virtual climate entity as the source, this would cause a recursive call"
     }
   }
 } 

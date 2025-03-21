@@ -11,7 +11,8 @@
       }
     },
     "error": {
-      "entity_not_found": "找不到指定的实体"
+      "entity_not_found": "找不到指定的实体",
+      "cannot_use_virtual_climate": "不能使用虚拟空调实体作为源空调，这会导致递归调用"
     },
     "abort": {
       "already_configured": "此组合已经配置"
@@ -27,6 +28,10 @@
           "temp_entity_id": "温度传感器实体"
         }
       }
+    },
+    "error": {
+      "entity_not_found": "找不到指定的实体",
+      "cannot_use_virtual_climate": "不能使用虚拟空调实体作为源空调，这会导致递归调用"
     }
   },
   "entity": {

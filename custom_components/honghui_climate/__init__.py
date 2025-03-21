@@ -3,13 +3,22 @@ from __future__ import annotations
 
 import logging
 import voluptuous as vol
+import time
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.const import Platform, ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STARTED
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    async_get as async_get_entity_registry,
+)
 
 from .const import DOMAIN, CONF_AC_ENTITY_ID, CONF_TEMP_ENTITY_ID
+
+# 防止递归锁
+_SERVICE_LOCKS = {}
+_MAX_SERVICE_FREQUENCY = 1.0  # 服务调用最小间隔时间（秒）
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +50,24 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         """处理设置空调实体服务。"""
         entity_id = call.data[ATTR_ENTITY_ID]
         ac_entity_id = call.data[CONF_AC_ENTITY_ID]
+        
+        # 防止服务频繁调用
+        lock_key = f"set_ac_{entity_id}"
+        current_time = time.time()
+        if lock_key in _SERVICE_LOCKS:
+            elapsed = current_time - _SERVICE_LOCKS[lock_key]
+            if elapsed < _MAX_SERVICE_FREQUENCY:
+                _LOGGER.warning(
+                    "服务调用过于频繁，距离上次调用仅 %.2f 秒，已跳过: %s", 
+                    elapsed, lock_key
+                )
+                return
+        _SERVICE_LOCKS[lock_key] = current_time
+        
+        # 检查是否试图将实体设置为虚拟空调
+        if ac_entity_id.startswith(f"{DOMAIN}."):
+            _LOGGER.error("不能将空调实体设置为虚拟空调实体: %s", ac_entity_id)
+            return
         
         # 获取实体条目ID
         entity_registry = hass.helpers.entity_registry.async_get(hass)
@@ -74,6 +101,19 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         """处理设置温度传感器实体服务。"""
         entity_id = call.data[ATTR_ENTITY_ID]
         temp_entity_id = call.data[CONF_TEMP_ENTITY_ID]
+        
+        # 防止服务频繁调用
+        lock_key = f"set_temp_{entity_id}"
+        current_time = time.time()
+        if lock_key in _SERVICE_LOCKS:
+            elapsed = current_time - _SERVICE_LOCKS[lock_key]
+            if elapsed < _MAX_SERVICE_FREQUENCY:
+                _LOGGER.warning(
+                    "服务调用过于频繁，距离上次调用仅 %.2f 秒，已跳过: %s", 
+                    elapsed, lock_key
+                )
+                return
+        _SERVICE_LOCKS[lock_key] = current_time
         
         # 获取实体条目ID
         entity_registry = hass.helpers.entity_registry.async_get(hass)
