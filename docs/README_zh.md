@@ -1,5 +1,7 @@
 # 洪绘空调 Home Assistant 集成
 
+[English](/README.md) | 简体中文
+
 这是一个Home Assistant自定义集成，可创建虚拟空调设备，该设备使用现有的空调实体进行控制，并使用单独的温度传感器实体来显示当前温度。
 
 ## 功能

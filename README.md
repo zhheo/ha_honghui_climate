@@ -1,24 +1,58 @@
-# 洪绘空调 Home Assistant 集成
+# Honghui Climate Home Assistant Integration
 
-这个集成可以让你创建一个虚拟空调，它使用已有的空调实体进行控制，但使用你选择的温度传感器来显示当前温度。
+English | [简体中文](docs/README_zh.md)
 
-## 快速安装
+This is a Home Assistant custom integration that creates a virtual climate device. The device uses an existing climate entity for control and a separate temperature sensor entity to display the current temperature.
 
-1. 将`custom_components/honghui_climate`文件夹复制到你的Home Assistant配置目录下的`custom_components`文件夹中
-2. 重启Home Assistant
-3. 在集成页面中搜索并添加"洪绘空调"
+## Features
 
-## 详细说明
+- Allows users to select existing climate entities and temperature sensor entities
+- Creates a virtual climate device that inherits all functionalities from the source climate
+- Uses a separate temperature sensor to display the current temperature
+- All control commands are passed to the source climate entity
 
-详细的安装和使用说明请参见[集成文档](custom_components/honghui_climate/README.md)。
+## Installation
 
-## 功能概述
+1. Copy the `custom_components/honghui_climate` folder to the `custom_components` directory in your Home Assistant installation
+   ```
+   # For example, if you're using HASS.IO:
+   /config/custom_components/honghui_climate
+   ```
+2. Restart Home Assistant
+3. Go to the Integrations page in Home Assistant and click the "Add Integration" button
+4. Search for "Honghui Climate" and select it
+5. Follow the configuration flow
 
-- 创建虚拟空调设备，继承源空调的所有功能
-- 使用单独的温度传感器来显示当前温度
-- 所有控制命令会传递给源空调实体
-- 支持服务API更新配置
+## Configuration
 
-## 支持
+1. Select an existing climate entity in the configuration flow
+2. Select an existing temperature sensor entity
+3. After saving the configuration, a new virtual climate entity will be created
 
-如有问题，请查看[故障排除指南](custom_components/honghui_climate/README.md#故障排除)。 
+## Use Cases
+
+- When the temperature sensor built into the AC is inaccurate
+- When you need to use a temperature sensor located in a different position to control the AC
+- To create more precise air conditioning control logic
+
+## Available Services
+
+The integration provides two services:
+
+- `honghui_climate.set_ac_entity`: Update the climate entity used by the virtual climate
+- `honghui_climate.set_temp_entity`: Update the temperature sensor entity used by the virtual climate
+
+## Notes
+
+- The source climate entity must be a valid climate type entity
+- The temperature sensor must provide valid temperature data
+- The functionality of the virtual climate depends on the functionality of the source climate
+
+## Troubleshooting
+
+If you can't find the entity after installation, try the following steps:
+
+1. Check the Home Assistant logs for error messages
+2. Make sure you have correctly selected the climate entity and temperature sensor entity in the configuration flow
+3. Restart Home Assistant
+4. If the problem persists, try removing the integration and reinstalling it 
