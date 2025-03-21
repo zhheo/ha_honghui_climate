@@ -13,6 +13,8 @@
 
 ## 安装方法
 
+### 方法一：
+
 1. 将`custom_components/honghui_climate`文件夹复制到你的Home Assistant安装目录的`custom_components`文件夹中
    ```
    # 例如，如果你使用的是HASS.IO：
@@ -22,6 +24,10 @@
 3. 在Home Assistant的集成页面中，点击"添加集成"按钮
 4. 搜索"洪绘空调"并选择它
 5. 按照配置流程进行操作
+
+### 方法2：
+
+HACS > 右上角三个点 > Custom repositories > Repository: https://github.com/zhheo/ha_honghui_climate & Category or Type: Integration > ADD > 点击 HACS 的 New 或 Available for download 分类下的 Xiaomi Home ，进入集成详情页 > DOWNLOAD
 
 ## 配置方法
 

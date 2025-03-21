@@ -13,6 +13,8 @@ This is a Home Assistant custom integration that creates a virtual climate devic
 
 ## Installation
 
+### Method 1:
+
 1. Copy the `custom_components/honghui_climate` folder to the `custom_components` directory in your Home Assistant installation
    ```
    # For example, if you're using HASS.IO:
@@ -22,6 +24,10 @@ This is a Home Assistant custom integration that creates a virtual climate devic
 3. Go to the Integrations page in Home Assistant and click the "Add Integration" button
 4. Search for "Honghui Climate" and select it
 5. Follow the configuration flow
+
+### Method 2:
+
+HACS > Three dots in the upper right corner > Custom repositories > Repository: https://github.com/zhheo/ha_honghui_climate & Category or Type: Integration > ADD > Click on the "Honghui Climate" under HACS's New or Available for download category > DOWNLOAD
 
 ## Configuration
 
