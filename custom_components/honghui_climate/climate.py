@@ -169,8 +169,9 @@ async def async_setup_climate_with_retry(
 class HonghuiAirClimate(ClimateEntity):
     """表示虚拟空调实体."""
 
-    # 不设置has_entity_name，使用自定义名称
-    _attr_name = DEFAULT_NAME
+    # 启用实体注册表命名，以便正确使用翻译
+    _attr_has_entity_name = True
+    _attr_name = None  # 不设置名称，让翻译系统处理
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -178,7 +179,7 @@ class HonghuiAirClimate(ClimateEntity):
         | ClimateEntityFeature.SWING_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_translation_key = "climate"
+    _attr_translation_key = "honghui_climate"
     
     # 预设一些基本属性，防止初始化时出错
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.AUTO]

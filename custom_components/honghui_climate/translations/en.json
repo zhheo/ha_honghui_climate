@@ -1,4 +1,5 @@
 {
+  "title": "HongHui Climate",
   "config": {
     "step": {
       "user": {
@@ -32,6 +33,57 @@
     "error": {
       "entity_not_found": "Entity not found",
       "cannot_use_virtual_climate": "Cannot use a virtual climate entity as the source, this would cause a recursive call"
+    }
+  },
+  "entity": {
+    "climate": {
+      "honghui_climate": {
+        "name": "HongHui Climate",
+        "state_attributes": {
+          "fan_mode": {
+            "name": "Fan Mode"
+          },
+          "swing_mode": {
+            "name": "Swing Mode"
+          },
+          "target_temp": {
+            "name": "Target Temperature"
+          },
+          "current_temp": {
+            "name": "Current Temperature"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_ac_entity": {
+      "name": "Set AC Entity",
+      "description": "Change the AC entity used by the virtual climate",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The HongHui Climate entity to modify"
+        },
+        "ac_entity_id": {
+          "name": "AC Entity",
+          "description": "The AC entity to use"
+        }
+      }
+    },
+    "set_temp_entity": {
+      "name": "Set Temperature Entity",
+      "description": "Change the temperature sensor entity used by the virtual climate",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The HongHui Climate entity to modify"
+        },
+        "temp_entity_id": {
+          "name": "Temperature Sensor Entity",
+          "description": "The temperature sensor entity to use"
+        }
+      }
     }
   }
 } 

@@ -1,11 +1,13 @@
 {
   "domain": "honghui_climate",
   "name": "HongHui Climate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "documentation": "https://github.com/zhheo/ha_honghui_climate",
+  "issue_tracker": "https://github.com/zhheo/ha_honghui_climate/issues",
   "dependencies": [],
   "codeowners": ["@zhheo"],
   "requirements": [],
   "iot_class": "local_polling",
-  "config_flow": true
+  "config_flow": true,
+  "translation_source": "translations"
 } 

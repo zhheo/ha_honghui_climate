@@ -7,4 +7,4 @@ CONF_AC_ENTITY_ID = "ac_entity_id"
 CONF_TEMP_ENTITY_ID = "temp_entity_id"
 
 # 默认值
-DEFAULT_NAME = "HongHui Climate" 
+DEFAULT_NAME = "洪绘空调" 
