@@ -40,9 +40,11 @@ SET_TEMP_ENTITY_SCHEMA = vol.Schema({
 
 # 定义 CONFIG_SCHEMA
 CONFIG_SCHEMA = vol.Schema({
-    vol.Required(CONF_AC_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_TEMP_ENTITY_ID): cv.entity_id,
-})
+    vol.Optional(DOMAIN): vol.Schema({
+        vol.Optional(CONF_AC_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_TEMP_ENTITY_ID): cv.entity_id,
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """设置HongHui Climate集成。"""
