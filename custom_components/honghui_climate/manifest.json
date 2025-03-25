@@ -1,8 +1,8 @@
 {
   "domain": "honghui_climate",
   "name": "HongHui Climate",
-  "config_flow": true,
   "codeowners": ["@zhheo"],
+  "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/zhheo/ha_honghui_climate",
   "iot_class": "local_polling",
