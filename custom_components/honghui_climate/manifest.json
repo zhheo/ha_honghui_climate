@@ -8,6 +8,5 @@
   "codeowners": ["@zhheo"],
   "requirements": [],
   "iot_class": "local_polling",
-  "config_flow": true,
-  "translation_source": "translations"
+  "config_flow": true
 } 
