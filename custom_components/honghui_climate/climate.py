@@ -177,6 +177,8 @@ class HonghuiAirClimate(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "honghui_climate"
@@ -506,4 +508,84 @@ class HonghuiAirClimate(ClimateEntity):
             "set_swing_mode",
             {"entity_id": self._ac_entity_id, "swing_mode": swing_mode},
             blocking=True,
-        ) 
+        )
+        
+    @prevent_recursion
+    async def async_turn_on(self) -> None:
+        """打开空调."""
+        # 检查目标实体ID，防止递归调用
+        entity_id = self.entity_id  # 获取当前实体的完整实体ID
+        if self._ac_entity_id == entity_id or self._ac_entity_id.startswith(f"{DOMAIN}."):
+            _LOGGER.error("检测到递归调用：无法将开机命令传递给虚拟空调实体 %s", self._ac_entity_id)
+            return
+            
+        _LOGGER.debug("打开空调: %s", self._ac_entity_id)
+        
+        try:
+            # 尝试调用源空调的 turn_on 服务
+            await self.hass.services.async_call(
+                "climate",
+                "turn_on",
+                {"entity_id": self._ac_entity_id},
+                blocking=True,
+            )
+            
+            # 如果源空调不支持 turn_on，尝试设置为默认模式
+            ac_state = self.hass.states.get(self._ac_entity_id)
+            if ac_state and ac_state.state == HVACMode.OFF.value:
+                # 获取可用的模式，优先选择 COOL，然后是 HEAT，最后是 AUTO
+                available_modes = ac_state.attributes.get("hvac_modes", [])
+                target_mode = None
+                
+                if HVACMode.COOL.value in available_modes:
+                    target_mode = HVACMode.COOL
+                elif HVACMode.HEAT.value in available_modes:
+                    target_mode = HVACMode.HEAT
+                elif HVACMode.AUTO.value in available_modes:
+                    target_mode = HVACMode.AUTO
+                
+                if target_mode:
+                    _LOGGER.debug("源空调不支持 turn_on，尝试设置为模式: %s", target_mode)
+                    await self.async_set_hvac_mode(target_mode)
+            
+            # 更新状态
+            self._update_state()
+            self.async_write_ha_state()
+            
+            _LOGGER.debug("成功打开空调")
+        except Exception as e:
+            _LOGGER.error("打开空调时出错: %s", str(e))
+            
+    @prevent_recursion
+    async def async_turn_off(self) -> None:
+        """关闭空调."""
+        # 检查目标实体ID，防止递归调用
+        entity_id = self.entity_id  # 获取当前实体的完整实体ID
+        if self._ac_entity_id == entity_id or self._ac_entity_id.startswith(f"{DOMAIN}."):
+            _LOGGER.error("检测到递归调用：无法将关机命令传递给虚拟空调实体 %s", self._ac_entity_id)
+            return
+            
+        _LOGGER.debug("关闭空调: %s", self._ac_entity_id)
+        
+        try:
+            # 尝试调用源空调的 turn_off 服务
+            await self.hass.services.async_call(
+                "climate",
+                "turn_off",
+                {"entity_id": self._ac_entity_id},
+                blocking=True,
+            )
+            
+            # 如果源空调不支持 turn_off，尝试设置为 OFF 模式
+            ac_state = self.hass.states.get(self._ac_entity_id)
+            if ac_state and ac_state.state != HVACMode.OFF.value:
+                _LOGGER.debug("源空调不支持 turn_off，尝试设置为 OFF 模式")
+                await self.async_set_hvac_mode(HVACMode.OFF)
+            
+            # 更新状态
+            self._update_state()
+            self.async_write_ha_state()
+            
+            _LOGGER.debug("成功关闭空调")
+        except Exception as e:
+            _LOGGER.error("关闭空调时出错: %s", str(e))
