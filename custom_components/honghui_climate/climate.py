@@ -189,6 +189,7 @@ class HonghuiAirClimate(ClimateEntity):
     _attr_hvac_action = HVACAction.OFF
     _attr_fan_modes = []
     _attr_swing_modes = []
+    _attr_swing_mode = None
 
     def __init__(
         self,
