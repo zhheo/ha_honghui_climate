@@ -243,19 +243,40 @@ class HonghuiAirClimate(ClimateEntity):
     @callback
     def _async_ac_changed(self, event) -> None:
         """空调实体状态变化时的处理."""
-        # 为了防止过多的状态更新，我们使用key来跟踪最近的更新时间
+        # 记录事件详情，帮助调试
+        _LOGGER.debug("接收到空调状态变化事件: %s", event.data)
+        
+        # 获取新状态和旧状态
+        old_state = event.data.get('old_state')
+        new_state = event.data.get('new_state')
+        
+        # 检查状态是否真的发生了变化
+        if old_state and new_state:
+            old_hvac_mode = old_state.state if old_state else None
+            new_hvac_mode = new_state.state if new_state else None
+            
+            # 如果状态没有实际变化，跳过更新
+            if old_hvac_mode == new_hvac_mode:
+                _LOGGER.debug("HVAC模式未发生变化，跳过更新: %s", new_hvac_mode)
+                return
+        
+        # 使用更智能的防抖机制
         key = f"{self.entity_id}_ac_changed"
         current_time = self.hass.loop.time()
         
         # 检查是否在短时间内多次更新
         if key in _RECURSION_COUNTERS:
             if isinstance(_RECURSION_COUNTERS[key], dict) and 'time' in _RECURSION_COUNTERS[key]:
-                # 如果最近一次更新在1秒内，则增加计数
-                if current_time - _RECURSION_COUNTERS[key]['time'] < 1.0:
+                time_diff = current_time - _RECURSION_COUNTERS[key]['time']
+                
+                # 如果最近一次更新在0.5秒内，则增加计数
+                if time_diff < 0.5:
                     _RECURSION_COUNTERS[key]['count'] += 1
-                    # 如果短时间内更新次数太多，则跳过此次更新
-                    if _RECURSION_COUNTERS[key]['count'] > _MAX_RECURSION_DEPTH:
-                        _LOGGER.debug("跳过短时间内过多的状态更新: %s", key)
+                    # 如果短时间内更新次数太多，使用延迟更新策略
+                    if _RECURSION_COUNTERS[key]['count'] > 3:
+                        _LOGGER.debug("检测到频繁状态更新，延迟处理: %s (第%d次)", key, _RECURSION_COUNTERS[key]['count'])
+                        # 延迟0.2秒后更新，确保获取到最终状态
+                        self.hass.async_create_task(self._delayed_state_update())
                         return
                 else:
                     # 重置计数器
@@ -270,9 +291,13 @@ class HonghuiAirClimate(ClimateEntity):
         # 更新时间戳
         _RECURSION_COUNTERS[key]['time'] = current_time
         
-        # 记录事件详情，帮助调试
-        _LOGGER.debug("接收到空调状态变化事件: %s", event.data)
-        
+        self._update_state()
+        self.async_write_ha_state()
+    
+    async def _delayed_state_update(self) -> None:
+        """延迟状态更新，用于处理频繁的状态变化."""
+        await asyncio.sleep(0.2)  # 延迟0.2秒
+        _LOGGER.debug("执行延迟状态更新")
         self._update_state()
         self.async_write_ha_state()
         
